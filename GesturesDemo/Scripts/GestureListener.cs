@@ -9,8 +9,8 @@ public class GestureListener : MonoBehaviour, KinectGestures.GestureListenerInte
 	
 	private bool swipeLeft;
 	private bool swipeRight;
-	private bool swipeUp;
-	private bool swipeDown;
+	private bool zoomOut;
+	private bool zoomIn;
 	
 	
 	public bool IsSwipeLeft()
@@ -35,22 +35,22 @@ public class GestureListener : MonoBehaviour, KinectGestures.GestureListenerInte
 		return false;
 	}
 	
-	public bool IsSwipeUp()
+	public bool IsZoomOut()
 	{
-		if(swipeUp)
+		if(zoomOut)
 		{
-			swipeUp = false;
+			zoomOut = false;
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public bool IsSwipeDown()
+	public bool IsZoomIn()
 	{
-		if(swipeDown)
+		if(zoomIn)
 		{
-			swipeDown = false;
+			zoomIn = false;
 			return true;
 		}
 		
@@ -65,8 +65,8 @@ public class GestureListener : MonoBehaviour, KinectGestures.GestureListenerInte
 		
 		manager.DetectGesture(userId, KinectGestures.Gestures.SwipeLeft);
 		manager.DetectGesture(userId, KinectGestures.Gestures.SwipeRight);
-//		manager.DetectGesture(userId, KinectGestures.Gestures.SwipeUp);
-//		manager.DetectGesture(userId, KinectGestures.Gestures.SwipeDown);
+		manager.DetectGesture(userId, KinectGestures.Gestures.ZoomOut);
+		manager.DetectGesture(userId, KinectGestures.Gestures.ZoomIn);
 		
 		if(GestureInfo != null)
 		{
@@ -101,10 +101,10 @@ public class GestureListener : MonoBehaviour, KinectGestures.GestureListenerInte
 			swipeLeft = true;
 		else if(gesture == KinectGestures.Gestures.SwipeRight)
 			swipeRight = true;
-		else if(gesture == KinectGestures.Gestures.SwipeUp)
-			swipeUp = true;
-		else if(gesture == KinectGestures.Gestures.SwipeDown)
-			swipeDown = true;
+		else if(gesture == KinectGestures.Gestures.ZoomOut)
+			zoomOut = true;
+		else if(gesture == KinectGestures.Gestures.ZoomIn)
+			zoomIn = true;
 		
 		return true;
 	}
