@@ -21,6 +21,14 @@ public class PresentationScript : MonoBehaviour
     }
     public TextureList[] texList;
 
+    [System.Serializable]
+    public class MovieList
+    {
+        public MovieTexture[] tex;
+
+    }
+    public MovieList[] movList;
+
     // if the presentation cube is behind the user (true) or in front of the user (false)
     public bool isBehindUser = false;
 
@@ -29,11 +37,13 @@ public class PresentationScript : MonoBehaviour
 
     private int menuX = 0;
     private int menuY = 0;
+    private int movie = 0;
 
     private bool isSpinning = false;
+    private bool movieMode = false;
     private float slideWaitUntil;
     private Quaternion targetRotation;
-
+    
     private GestureListener gestureListener;
 
     void Start()
@@ -69,6 +79,8 @@ public class PresentationScript : MonoBehaviour
         KinectManager kinectManager = KinectManager.Instance;
         if (autoChangeAlfterDelay && (!kinectManager || !kinectManager.IsInitialized() || !kinectManager.IsUserDetected()))
             return;
+       
+        if (!movieMode) movie = 0;
 
         if (!isSpinning)
         {
@@ -90,9 +102,9 @@ public class PresentationScript : MonoBehaviour
                     RotateToNext();
                 else if (gestureListener.IsSwipeRight())
                     RotateToPrevious();
-                else if (gestureListener.IsSwipeUp())
+                else if (gestureListener.IsZoomOut())
                     RotateUp();
-                else if (gestureListener.IsSwipeDown())
+                else if (gestureListener.IsZoomIn())
                     RotateDown();
             }
 
@@ -122,9 +134,20 @@ public class PresentationScript : MonoBehaviour
 
     private void RotateToNext()
     {
-        menuY = 0;
-        // set the next texture slide
-        menuX = (menuX + 1) % texList.Count;
+        if (menuY = (texList[menuX].tex.Count - 1))
+        {
+            movieMode = true;
+            if (movie < (movList[menuX].tex.Count - 1)) movie += 1;
+            movTexture = movList[menuX].tex[movie];
+        }
+        else
+        {
+            movieMode = false;
+            //we only swipe to the level 0
+            menuY = 0;
+            // set the next texture slide
+            menuX = (menuX + 1) % texList.Count;
+        }
 
         if (!isBehindUser)
         {
@@ -140,7 +163,13 @@ public class PresentationScript : MonoBehaviour
 
         if (horizontalSides[side] && horizontalSides[side].renderer)
         {
-            horizontalSides[side].renderer.material.mainTexture = texList[menuX].tex[menuY];
+            if (movieMode) {
+                horizontalSides[side].renderer.material.mainTexture = movTexture;
+                movTexture.Stop();
+                movTexture.Play();
+            }
+            else
+                horizontalSides[side].renderer.material.mainTexture = texList[menuX].tex[menuY];
         }
 
         // rotate the presentation
@@ -152,12 +181,23 @@ public class PresentationScript : MonoBehaviour
 
     private void RotateToPrevious()
     {
-        menuY = 0;
-        // set the previous texture slide
-        if (menuX <= 0)
-            menuX = texList.Count - 1;
+        if (menuY = (texList[menuX].tex.Count - 1))
+        {
+            movieMode = true;
+            if (movie > 0) movie -= 1;
+            movTexture = movList[menuX].tex[movie];
+        }
         else
-            menuX -= 1;
+        {
+            movieMode = false;
+            //we only swipe to the level 0
+            menuY = 0;
+            // set the previous texture slide
+            if (menuX <= 0)
+                menuX = texList.Count - 1;
+            else
+                menuX -= 1;
+        }
 
         if (!isBehindUser)
         {
@@ -173,7 +213,14 @@ public class PresentationScript : MonoBehaviour
 
         if (horizontalSides[side] && horizontalSides[side].renderer)
         {
-            horizontalSides[side].renderer.material.mainTexture = texList[menuX].tex[menuY];
+            if (movieMode)
+            {
+                horizontalSides[side].renderer.material.mainTexture = movTexture;
+                movTexture.Stop();
+                movTexture.Play();
+            }
+            else
+                horizontalSides[side].renderer.material.mainTexture = texList[menuX].tex[menuY];
         }
 
         // rotate the presentation
@@ -184,51 +231,24 @@ public class PresentationScript : MonoBehaviour
     }
     private void RotateUp()
     {
+        movieMode = false;
         // set the above texture slide
-        if (menuY <= 0)
-            menuY = texList[menuX].tex.Count - 1;
-        else
+        if (menuY > 0)
             menuY -= 1;
-
-        if (!isBehindUser)
-        {
-            if (side <= 0)
-                side = maxSides - 1;
-            else
-                side -= 1;
-        }
-        else
-        {
-            side = (side + 1) % maxSides;
-        }
 
         if (horizontalSides[side] && horizontalSides[side].renderer)
         {
             horizontalSides[side].renderer.material.mainTexture = texList[menuX].tex[menuY];
         }
 
-        // rotate the presentation
-        float yawRotation = !isBehindUser ? -360f / maxSides : 360f / maxSides;
-        Vector3 rotateDegrees = new Vector3(yawRotation, 0f, 0f);
-        targetRotation *= Quaternion.Euler(rotateDegrees);
         isSpinning = true;
     }
     private void RotateDown()
     {
         // set the next texture slide
-        menuY = (menuY + 1) % texList[menuX].tex.Count;
+        if (menuY < (texList[menuX].tex.Count-1))
+         menuY += (menuY - 1) % texList[menuX].tex.Count;
 
-        if (!isBehindUser)
-        {
-            side = (side + 1) % maxSides;
-        }
-        else
-        {
-            if (side <= 0)
-                side = maxSides - 1;
-            else
-                side -= 1;
-        }
 
         if (horizontalSides[side] && horizontalSides[side].renderer)
         {
@@ -236,9 +256,6 @@ public class PresentationScript : MonoBehaviour
         }
 
         // rotate the presentation
-        float yawRotation = !isBehindUser ? 360f / maxSides : -360f / maxSides;
-        Vector3 rotateDegrees = new Vector3(yawRotation, 0f, 0f);
-        targetRotation *= Quaternion.Euler(rotateDegrees);
         isSpinning = true;
     }
 }
